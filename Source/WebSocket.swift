@@ -415,7 +415,7 @@ private class Inflater {
             return nil
         }
         self.windowBits = windowBits
-        let ret = inflateInit2(&strm, windowBits: -CInt(windowBits), version: zlibVersion(), stream_size: CInt(sizeof(z_stream)))
+        let ret = inflateInit2(&strm, windowBits: -CInt(windowBits), version: zlibVersion(), stream_size: CInt(sizeof(z_stream.self)))
         if ret != 0 {
             return nil
         }
@@ -477,7 +477,7 @@ private class Deflater {
         }
         self.windowBits = windowBits
         self.memLevel = memLevel
-        let ret = deflateInit2(&strm, level: 6, method: 8, windowBits: -CInt(windowBits), memLevel: CInt(memLevel), strategy: 0, version: zlibVersion(), stream_size: CInt(sizeof(z_stream)))
+        let ret = deflateInit2(&strm, level: 6, method: 8, windowBits: -CInt(windowBits), memLevel: CInt(memLevel), strategy: 0, version: zlibVersion(), stream_size: CInt(sizeof(z_stream.self)))
         if ret != 0 {
             return nil
         }
@@ -967,8 +967,8 @@ private class InnerWebSocket: Hashable {
     }
 
     func closeConn() {
-        rd.remove(from: RunLoop.main(), forMode: RunLoopMode.defaultRunLoopMode)
-        wr.remove(from: RunLoop.main(), forMode: RunLoopMode.defaultRunLoopMode)
+        rd.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        wr.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
         rd.delegate = nil
         wr.delegate = nil
         rd.close()
@@ -1044,7 +1044,7 @@ private class InnerWebSocket: Hashable {
         for i in 0 ..< 4 {
             keyb[i] = arc4random()
         }
-        let rkey = Data(bytes: UnsafePointer<UInt8>(keyb), count: 16).base64EncodedString(NSData.Base64EncodingOptions(rawValue: 0))
+        let rkey = Data(bytes: UnsafePointer<UInt8>(keyb), count: 16).base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
         reqs += "Sec-WebSocket-Key: \(rkey)\r\n"
         reqs += "\r\n"
         var header = [UInt8]()
@@ -1063,33 +1063,33 @@ private class InnerWebSocket: Hashable {
         rdo = readStream!.takeRetainedValue()
         wro = writeStream!.takeRetainedValue()
         (rd, wr) = (rdo!, wro!)
-        rd.setProperty(security.level, forKey: Stream.PropertyKey.socketSecurityLevelKey.rawValue)
-		wr.setProperty(security.level, forKey: Stream.PropertyKey.socketSecurityLevelKey.rawValue)
+        rd.setProperty(security.level, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.socketSecurityLevelKey.rawValue))
+		wr.setProperty(security.level, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.socketSecurityLevelKey.rawValue))
         if services.contains(.VoIP) {
-            rd.setProperty(StreamNetworkServiceTypeValue.voip, forKey: Stream.PropertyKey.networkServiceType.rawValue)
-            wr.setProperty(StreamNetworkServiceTypeValue.voip, forKey: Stream.PropertyKey.networkServiceType.rawValue)
+            rd.setProperty(StreamNetworkServiceTypeValue.voIP, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
+            wr.setProperty(StreamNetworkServiceTypeValue.voIP, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
         }
         if services.contains(.Video) {
-            rd.setProperty(StreamNetworkServiceTypeValue.video, forKey: Stream.PropertyKey.networkServiceType.rawValue)
-            wr.setProperty(StreamNetworkServiceTypeValue.video, forKey: Stream.PropertyKey.networkServiceType.rawValue)
+            rd.setProperty(StreamNetworkServiceTypeValue.video, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
+            wr.setProperty(StreamNetworkServiceTypeValue.video, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
         }
         if services.contains(.Background) {
-            rd.setProperty(StreamNetworkServiceTypeValue.background, forKey: Stream.PropertyKey.networkServiceType.rawValue)
-            wr.setProperty(StreamNetworkServiceTypeValue.background, forKey: Stream.PropertyKey.networkServiceType.rawValue)
+            rd.setProperty(StreamNetworkServiceTypeValue.background, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
+            wr.setProperty(StreamNetworkServiceTypeValue.background, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
         }
         if services.contains(.Voice) {
-            rd.setProperty(StreamNetworkServiceTypeValue.voice, forKey: Stream.PropertyKey.networkServiceType.rawValue)
-            wr.setProperty(StreamNetworkServiceTypeValue.voice, forKey: Stream.PropertyKey.networkServiceType.rawValue)
+            rd.setProperty(StreamNetworkServiceTypeValue.voice, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
+            wr.setProperty(StreamNetworkServiceTypeValue.voice, forKey: Stream.PropertyKey(rawValue: Stream.PropertyKey.networkServiceType.rawValue))
         }
         if allowSelfSignedSSL {
             let prop: Dictionary<NSObject,NSObject> = [kCFStreamSSLPeerName: kCFNull, kCFStreamSSLValidatesCertificateChain: NSNumber(value: false)]
-            rd.setProperty(prop, forKey: kCFStreamPropertySSLSettings as String)
-            wr.setProperty(prop, forKey: kCFStreamPropertySSLSettings as String)
+            rd.setProperty(prop, forKey: Stream.PropertyKey.socketSecurityLevelKey)
+            wr.setProperty(prop, forKey: Stream.PropertyKey.socketSecurityLevelKey)
         }
         rd.delegate = delegate
         wr.delegate = delegate
-        rd.schedule(in: RunLoop.main(), forMode: RunLoopMode.defaultRunLoopMode)
-        wr.schedule(in: RunLoop.main(), forMode: RunLoopMode.defaultRunLoopMode)
+        rd.schedule(in: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        wr.schedule(in: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
         rd.open()
         wr.open()
         try write(header, length: header.count)
