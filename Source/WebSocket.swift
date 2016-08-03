@@ -87,12 +87,12 @@ private enum OpCode : UInt8, CustomStringConvertible {
     }
     var description : String {
         switch self {
-        case continu: return "Continue"
-        case text: return "Text"
-        case binary: return "Binary"
-        case close: return "Close"
-        case ping: return "Ping"
-        case pong: return "Pong"
+        case .continu: return "Continue"
+        case .text: return "Text"
+        case .binary: return "Binary"
+        case .close: return "Close"
+        case .ping: return "Ping"
+        case .pong: return "Pong"
         }
     }
 }
@@ -104,13 +104,13 @@ public struct WebSocketEvents {
     /// An event to be called when the WebSocket connection's readyState changes to .Closed.
     public var close : (code : Int, reason : String, wasClean : Bool)->() = {(code, reason, wasClean) in}
     /// An event to be called when an error occurs.
-    public var error : (error : ErrorProtocol)->() = {(error) in}
+    public var error : (error : Error)->() = {(error) in}
     /// An event to be called when a message is received from the server.
     public var message : (data : Any)->() = {(data) in}
     /// An event to be called when a pong is received from the server.
     public var pong : (data : Any)->() = {(data) in}
     /// An event to be called when the WebSocket process has ended; this event is guarenteed to be called once and can be used as an alternative to the "close" or "error" events.
-    public var end : (code : Int, reason : String, wasClean : Bool, error : ErrorProtocol?)->() = {(code, reason, wasClean, error) in}
+    public var end : (code : Int, reason : String, wasClean : Bool, error : Error?)->() = {(code, reason, wasClean, error) in}
 }
 
 /// The WebSocketBinaryType enum is used by the binaryType property and indicates the type of binary data being transmitted by the WebSocket connection.
@@ -123,9 +123,9 @@ public enum WebSocketBinaryType : CustomStringConvertible {
     case uInt8UnsafeBufferPointer
     public var description : String {
         switch self {
-        case uInt8Array: return "UInt8Array"
-        case nsData: return "NSData"
-        case uInt8UnsafeBufferPointer: return "UInt8UnsafeBufferPointer"
+        case .uInt8Array: return "UInt8Array"
+        case .nsData: return "NSData"
+        case .uInt8UnsafeBufferPointer: return "UInt8UnsafeBufferPointer"
         }
     }
 }
@@ -151,10 +151,10 @@ public enum WebSocketBinaryType : CustomStringConvertible {
     /// Returns a string that represents the ReadyState value.
     public var description : String {
         switch self {
-        case connecting: return "Connecting"
-        case open: return "Open"
-        case closing: return "Closing"
-        case closed: return "Closed"
+        case .connecting: return "Connecting"
+        case .open: return "Open"
+        case .closing: return "Closing"
+        case .closed: return "Closed"
         }
     }
 }
@@ -196,7 +196,7 @@ private let atEndDetails = "streamStatus.atEnd"
 private let timeoutDetails = "The operation couldn’t be completed. Operation timed out"
 private let timeoutDuration : CFTimeInterval = 30
 
-public enum WebSocketError : ErrorProtocol, CustomStringConvertible {
+public enum WebSocketError : Error, CustomStringConvertible {
     case memory
     case needMoreInput
     case invalidHeader
@@ -365,7 +365,7 @@ private class Delegate : NSObject, StreamDelegate {
 @_silgen_name("inflate") private func inflateG(_ strm : UnsafeMutablePointer<Void>, flush : CInt) -> CInt
 @_silgen_name("inflateEnd") private func inflateEndG(_ strm : UnsafeMutablePointer<Void>) -> CInt
 
-private func zerror(_ res : CInt) -> ErrorProtocol? {
+private func zerror(_ res : CInt) -> Error? {
     var err = ""
     switch res {
     case 0: return nil
@@ -607,17 +607,17 @@ private class InnerWebSocket: Hashable {
         self.id = manager.nextId()
         self.request = request
         self.subProtocols = subProtocols
-        self.outputBytes = UnsafeMutablePointer<UInt8>(allocatingCapacity: windowBufferSize)
+        self.outputBytes = UnsafeMutablePointer<UInt8>.allocate(capacity: windowBufferSize)
         self.outputBytesSize = windowBufferSize
-        self.inputBytes = UnsafeMutablePointer<UInt8>(allocatingCapacity: windowBufferSize)
+        self.inputBytes = UnsafeMutablePointer<UInt8>.allocate(capacity: windowBufferSize)
         self.inputBytesSize = windowBufferSize
         self.delegate = Delegate()
         if stub{
-            manager.queue.after(when: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
+            manager.queue.asyncAfter(deadline: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
                 var _ = self
             }
         } else {
-            manager.queue.after(when: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
+            manager.queue.asyncAfter(deadline: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
                 manager.add(self)
             }
         }
@@ -682,7 +682,7 @@ private class InnerWebSocket: Hashable {
     var closeReason = ""
     var closeClean = false
     var closeFinal = false
-    var finalError : ErrorProtocol?
+    var finalError : Error?
     var exit = false
     var more = true
     func step(){
@@ -818,7 +818,7 @@ private class InnerWebSocket: Hashable {
                         self.unlock()
                         manager.signal()
                     } else {
-                        manager.queue.after(when: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
+                        manager.queue.asyncAfter(deadline: DispatchTime.now() + Double(0) / Double(NSEC_PER_SEC)){
                             self.lock()
                             self.frames += [frame]
                             self.unlock()
